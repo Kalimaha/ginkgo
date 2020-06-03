@@ -1,19 +1,21 @@
 package reporter
 
 import (
+	"errors"
 	"fmt"
 	"github.com/onsi/ginkgo/types"
-	"strings"
 )
 
 type rspecReporter struct {
-	leaves []Leaf
+	leaves map[string]Leaf
 }
 
 type Leaf struct {
 	Description string
-	Leaves      []Leaf
+	Leaves      map[string]Leaf
 	Passed      int
+	Level       int
+	Duration    string
 }
 
 var (
@@ -21,39 +23,11 @@ var (
 	Red   = Color("\033[1;31m%s\033[0m")
 )
 
-func seekAndInsert(leaves *[]Leaf, spec *types.SpecSummary, level int) {
-	found := false
-	for _, leaf := range *leaves {
-		if leaf.Description == formatOut(spec.ComponentTexts[level], level) {
-			found = true
-			break
-		}
-	}
-
-	if len(spec.ComponentTexts) > level && !found {
-		*leaves = append(*leaves, newLeaf(spec, level))
-	}
-}
-
-func newLeaf(spec *types.SpecSummary, level int) Leaf {
-	return Leaf{Description: formatOut(spec.ComponentTexts[level], level), Passed: bool2int(spec.Passed())}
-}
-
-func formatOut(msg string, level int) string {
-	blanks := strings.Builder{}
-	for i := 0; i < level; i++ {
-		blanks.WriteString("  ")
-	}
-	blanks.WriteString("%s")
-
-	return fmt.Sprintf(blanks.String(), msg)
-}
-
 func icon(passed int) (out string) {
 	if passed == 1 {
-		return Green("✔️ ")
+		return Green("✔️")
 	} else if passed == -1 {
-		return Red("✗ ")
+		return Red("✗")
 	}
 
 	return out
@@ -72,3 +46,32 @@ func bool2int(passed bool) int {
 	}
 	return -1
 }
+
+func newLeaf(description string, level int, spec *types.SpecSummary) Leaf {
+	return Leaf{
+		Description: description,
+		Leaves: make(map[string]Leaf),
+		Passed: bool2int(spec.Passed()),
+		Level: level,
+		Duration: spec.RunTime.String(),
+	}
+}
+
+func FindParent(leaves map[string]Leaf, keys []string, currentParent Leaf) (out Leaf, err error) {
+	currentLeaf, ok := leaves[keys[0]]
+	if !ok {
+		return currentParent, err
+	}
+
+	if len(keys) == 1 && currentLeaf.Description == keys[0] {
+		return currentParent, err
+	}
+
+	if len(keys) > 1 {
+		_, tail := keys[0], keys[1:]
+		return FindParent(currentLeaf.Leaves, tail, currentLeaf)
+	}
+
+	return out, errors.New("boom")
+}
+

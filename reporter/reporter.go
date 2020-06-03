@@ -8,7 +8,7 @@ import (
 
 func New() *rspecReporter {
 	return &rspecReporter{
-		leaves: []Leaf{},
+		leaves: map[string]Leaf{},
 	}
 }
 
@@ -18,41 +18,33 @@ func (r *rspecReporter) AfterSuiteDidRun(*types.SetupSummary)                   
 func (r *rspecReporter) SpecWillRun(*types.SpecSummary)                                  {}
 
 func (r *rspecReporter) SpecDidComplete(spec *types.SpecSummary) {
-	seekAndInsert(&r.leaves, spec, 1)
+	var keys []string
+	keysMap := make(map[int]string)
 
-	for idx1, v1 := range r.leaves {
-		if v1.Description == formatOut(spec.ComponentTexts[1], 1) {
-			seekAndInsert(&r.leaves[idx1].Leaves, spec, 2)
-		}
+	for i := 1; i < len(spec.ComponentTexts); i++ {
+		keys = append(keys, spec.ComponentTexts[i])
+		keysMap[i] = spec.ComponentTexts[i]
 	}
 
-	for idx1, v1 := range r.leaves {
-		if v1.Description == formatOut(spec.ComponentTexts[1], 1) {
-			for idx2, v2 := range r.leaves[idx1].Leaves {
-				if v2.Description == formatOut(spec.ComponentTexts[2], 2) {
-					seekAndInsert(&r.leaves[idx1].Leaves[idx2].Leaves, spec, 3)
-				}
-			}
-		}
+	lastLeaf, ok := r.leaves[spec.ComponentTexts[1]]
+	if !ok {
+		r.leaves[spec.ComponentTexts[1]] = newLeaf(spec.ComponentTexts[1], 1, spec)
 	}
 
-	for idx1, v1 := range r.leaves {
-		if v1.Description == formatOut(spec.ComponentTexts[1], 1) {
-			for idx2, v2 := range r.leaves[idx1].Leaves {
-				if v2.Description == formatOut(spec.ComponentTexts[2], 2) {
-					for idx3, v3 := range r.leaves[idx1].Leaves[idx2].Leaves {
-						if v3.Description == formatOut(spec.ComponentTexts[3], 3) {
-							seekAndInsert(&r.leaves[idx1].Leaves[idx2].Leaves[idx3].Leaves, spec, 4)
-						}
-					}
-				}
+	for i := 2; i <= len(keys); i++ {
+		lastLeaf, ok = lastLeaf.Leaves[spec.ComponentTexts[i]]
+		if !ok {
+			var parentKeys []string
+			for j := 0; j < i; j++ {
+				parentKeys = append(parentKeys, keys[j])
 			}
+			parentLeaf, _ := FindParent(r.leaves, parentKeys, Leaf{})
+			parentLeaf.Leaves[spec.ComponentTexts[i]] = newLeaf(spec.ComponentTexts[i], i, spec)
 		}
 	}
 }
 
 func (r *rspecReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
-	fmt.Println()
 	fmt.Println(summary.SuiteDescription)
 	PrintLeaves(r.leaves)
 	fmt.Println()
