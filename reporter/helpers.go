@@ -1,7 +1,9 @@
 package reporter
 
 import (
+	"errors"
 	"fmt"
+	"github.com/onsi/ginkgo/types"
 )
 
 type rspecReporter struct {
@@ -44,3 +46,32 @@ func bool2int(passed bool) int {
 	}
 	return -1
 }
+
+func newLeaf(description string, level int, spec *types.SpecSummary) Leaf {
+	return Leaf{
+		Description: description,
+		Leaves: make(map[string]Leaf),
+		Passed: bool2int(spec.Passed()),
+		Level: level,
+		Duration: spec.RunTime.String(),
+	}
+}
+
+func FindParent(leaves map[string]Leaf, keys []string, currentParent Leaf) (out Leaf, err error) {
+	currentLeaf, ok := leaves[keys[0]]
+	if !ok {
+		return currentParent, err
+	}
+
+	if len(keys) == 1 && currentLeaf.Description == keys[0] {
+		return currentParent, err
+	}
+
+	if len(keys) > 1 {
+		_, tail := keys[0], keys[1:]
+		return FindParent(currentLeaf.Leaves, tail, currentLeaf)
+	}
+
+	return out, errors.New("boom")
+}
+
