@@ -1,16 +1,19 @@
 package reporter
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-func PrintLeaves(leaves []Leaf) {
-	for _, v1 := range leaves {
-		printLine(v1)
-		for _, v2 := range v1.Leaves {
-			printLine(v2)
-			for _, v3 := range v2.Leaves {
-				printLine(v3)
-				for _, v4 := range v3.Leaves {
-					printLine(v4)
+func PrintLeaves(m map[string]Leaf) {
+	for _, leaf1 := range m {
+		printLine(leaf1)
+		for _, leaf2 := range leaf1.Leaves {
+			printLine(leaf2)
+			for _, leaf3 := range leaf2.Leaves {
+				printLine(leaf3)
+				for _, leaf4 := range leaf3.Leaves {
+					printLine(leaf4)
 				}
 			}
 		}
@@ -19,8 +22,22 @@ func PrintLeaves(leaves []Leaf) {
 
 func printLine(leaf Leaf) {
 	if len(leaf.Leaves) == 0 {
-		fmt.Println(leaf.Description, icon(leaf.Passed))
+		fmt.Println(formatOut(leaf.Description, leaf.Level), icon(leaf.Passed), duration(leaf.Duration))
 	} else {
-		fmt.Println(leaf.Description)
+		fmt.Println(formatOut(leaf.Description, leaf.Level))
 	}
+}
+
+func formatOut(msg string, level int) string {
+	blanks := strings.Builder{}
+	for i := 0; i < level; i++ {
+		blanks.WriteString("  ")
+	}
+	blanks.WriteString("%s")
+
+	return fmt.Sprintf(blanks.String(), msg)
+}
+
+func duration(duration string) string {
+	return fmt.Sprintf("[%s]", duration)
 }
