@@ -16,6 +16,7 @@ type Leaf struct {
 	Passed      int
 	Level       int
 	Duration    string
+	Link		string
 }
 
 var (
@@ -54,11 +55,13 @@ func newLeaf(description string, level int, spec *types.SpecSummary) Leaf {
 		Passed: bool2int(spec.Passed()),
 		Level: level,
 		Duration: spec.RunTime.String(),
+		Link: spec.ComponentCodeLocations[1].String(),
 	}
 }
 
 func FindParent(leaves map[string]Leaf, keys []string, currentParent Leaf) (out Leaf, err error) {
 	currentLeaf, ok := leaves[keys[0]]
+
 	if !ok {
 		return currentParent, err
 	}

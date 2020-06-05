@@ -48,4 +48,10 @@ func (r *rspecReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	fmt.Println(summary.SuiteDescription)
 	PrintLeaves(r.leaves)
 	fmt.Println()
+	fmt.Println("Summary")
+	fmt.Println("-------")
+	fmt.Println(fmt.Sprintf("Total..................................................: %d", summary.NumberOfTotalSpecs))
+	fmt.Println(fmt.Sprintf("Successful.............................................: %d", summary.NumberOfPassedSpecs))
+	fmt.Println(fmt.Sprintf("Failed.................................................: %d", summary.NumberOfFailedSpecs))
+	fmt.Println()
 }
