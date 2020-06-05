@@ -23,6 +23,9 @@ func PrintLeaves(m map[string]Leaf) {
 func printLine(leaf Leaf) {
 	if len(leaf.Leaves) == 0 {
 		fmt.Println(formatOut(leaf.Description, leaf.Level), icon(leaf.Passed), duration(leaf.Duration))
+		if leaf.Passed == -1 {
+			fmt.Println(formatOut(fmt.Sprintf("  %s", leaf.Link), leaf.Level))
+		}
 	} else {
 		fmt.Println(formatOut(leaf.Description, leaf.Level))
 	}
