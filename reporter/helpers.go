@@ -55,7 +55,7 @@ func newLeaf(description string, level int, spec *types.SpecSummary) Leaf {
 		Passed: bool2int(spec.Passed()),
 		Level: level,
 		Duration: spec.RunTime.String(),
-		Link: spec.ComponentCodeLocations[1].String(),
+		Link: spec.ComponentCodeLocations[2].String(),
 	}
 }
 
